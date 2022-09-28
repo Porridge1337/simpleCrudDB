@@ -16,12 +16,10 @@ import java.sql.SQLException;
 import java.sql.Savepoint;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class UserDaoImpl implements Dao<Users, String> {
@@ -51,7 +49,8 @@ public class UserDaoImpl implements Dao<Users, String> {
                                left join user_role as ur
                                 on ur.user_id = u.id
                                 left join role as r
-                                on r.r_id = ur.role_id;
+                                on r.r_id = ur.role_id
+                                ORDER BY r.role;
                             """
             );
             ResultSet rs = ps.executeQuery();
@@ -122,8 +121,7 @@ public class UserDaoImpl implements Dao<Users, String> {
             psUsers.setString(2, o.getSurname());
             psUsers.setInt(3, o.getAge());
             if ((o.getName().equals("") && o.getName().length() > 30) ||
-                    (o.getSurname().equals("") && o.getSurname().length() > 30)
-                    ||
+                    (o.getSurname().equals("") && o.getSurname().length() > 30) ||
                     o.getAge() < 0) {
                 System.out.println("values shouldn't be null or less than zero");
                 connection.rollback(save1);
@@ -153,16 +151,39 @@ public class UserDaoImpl implements Dao<Users, String> {
     public boolean update(Users o) {
         boolean resultUpdate = false;
         try (Connection connection = establishConnection()) {
-            PreparedStatement ps = connection.prepareStatement(
+            PreparedStatement psUser = connection.prepareStatement(
                     """
                             UPDATE users SET name = ?, surname = ?, age = ?
                             WHERE users.id = ?;
                             """);
-            ps.setString(1, o.getName());
-            ps.setString(2, o.getSurname());
-            ps.setInt(3, o.getAge());
-            ps.setInt(4, o.getId());
-            resultUpdate = ps.executeUpdate() > 0;
+            PreparedStatement psUserRole = connection.prepareStatement(
+                    """
+                            UPDATE user_role SET user_id = ?, role_id = ?
+                            WHERE  user_role.user_id =?; 
+                            """
+            );
+            connection.setAutoCommit(false);
+            Savepoint save1 = connection.setSavepoint();
+
+            psUser.setString(1, o.getName());
+            psUser.setString(2, o.getSurname());
+            psUser.setInt(3, o.getAge());
+            psUser.setInt(4, o.getId());
+            int userUpdate = psUser.executeUpdate();
+            if ((o.getName().equals("") && o.getName().length() > 30) ||
+                    (o.getSurname().equals("") && o.getSurname().length() > 30) ||
+                    o.getAge() < 0) {
+                System.out.println("values shouldn't be null or less than zero");
+                connection.rollback(save1);
+            } else {
+                psUserRole.setInt(1, o.getId());
+                psUserRole.setInt(2, o.getRoleList().get(0).getR_id());
+                psUserRole.setInt(3, o.getId());
+                int user_role = psUserRole.executeUpdate();
+                resultUpdate = userUpdate > 0 && user_role > 0;
+            }
+            connection.commit();
+            connection.setAutoCommit(true);
         } catch (SQLException e) {
             e.printStackTrace();
         }
