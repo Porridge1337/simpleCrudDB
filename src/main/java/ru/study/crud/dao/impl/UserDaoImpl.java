@@ -122,7 +122,8 @@ public class UserDaoImpl implements Dao<Users, String> {
             psUsers.setString(2, o.getSurname());
             psUsers.setInt(3, o.getAge());
             if ((o.getName().equals("") && o.getName().length() > 30) ||
-                    (o.getSurname().equals("") && o.getSurname().length() > 30) ||
+                    (o.getSurname().equals("") && o.getSurname().length() > 30)
+                    ||
                     o.getAge() < 0) {
                 System.out.println("values shouldn't be null or less than zero");
                 connection.rollback(save1);
