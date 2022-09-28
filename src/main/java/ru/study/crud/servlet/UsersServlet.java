@@ -1,7 +1,10 @@
 package ru.study.crud.servlet;
 
 import ru.study.crud.dao.Dao;
+import ru.study.crud.dao.DaoRole;
+import ru.study.crud.dao.impl.RoleDaoImpl;
 import ru.study.crud.dao.impl.UserDaoImpl;
+import ru.study.crud.model.Role;
 import ru.study.crud.model.Users;
 
 import javax.servlet.RequestDispatcher;
@@ -12,6 +15,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +23,7 @@ import java.util.Optional;
 public class UsersServlet extends HttpServlet {
 
     private static final Dao<Users, String> USER_DAO = new UserDaoImpl();
+    private static final DaoRole ROLE_DAO = new RoleDaoImpl();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -65,6 +70,8 @@ public class UsersServlet extends HttpServlet {
 
     private void showNewForm(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         RequestDispatcher rd = req.getRequestDispatcher("/WEB-INF/view/insertPage.jsp");
+        List<Role> roleList = ROLE_DAO.findAll();
+        req.setAttribute("roleList", roleList);
         rd.forward(req, resp);
     }
 
@@ -80,10 +87,15 @@ public class UsersServlet extends HttpServlet {
         String name = req.getParameter("name");
         String surname = req.getParameter("surname");
         int age = Integer.parseInt(req.getParameter("age"));
+        int r_id = Integer.parseInt(req.getParameter("role"));
+        Optional<Role> roleOptional = ROLE_DAO.findById(r_id);
+        List<Role> roleList = new ArrayList<>();
+        roleList.add(roleOptional.get());
         Users createdUser = new Users();
         createdUser.setName(name);
         createdUser.setSurname(surname);
         createdUser.setAge(age);
+        createdUser.setRoleList(roleList);
         USER_DAO.save(createdUser);
         resp.sendRedirect("/users");
     }
@@ -93,7 +105,7 @@ public class UsersServlet extends HttpServlet {
         String name = req.getParameter("name");
         String surname = req.getParameter("surname");
         int age = Integer.parseInt(req.getParameter("age"));
-        Users editUser = new Users(id, name, surname, age);
+        Users editUser = new Users(id, name, surname, age, new ArrayList<>()); // С РОЛЬЮ НАДО ПОДУМАТЬ
         USER_DAO.update(editUser);
         resp.sendRedirect("/users");
     }
