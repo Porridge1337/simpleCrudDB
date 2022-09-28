@@ -43,6 +43,13 @@
                 <label for="age">Age</label>
             </div>
             <input type="submit" value="save"/>
+            <c:if test="${user==null}">
+                <select id="role" name="role">
+                    <c:forEach items="${roleList}" var="roles">
+                        <option value="${roles.r_id}"> ${roles.role}</option>
+                    </c:forEach>
+                </select>
+            </c:if>
         </form>
 </div>
 </body>
