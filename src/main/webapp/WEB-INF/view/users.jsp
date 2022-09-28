@@ -13,6 +13,7 @@
             <th>Name</th>
             <th>Surname</th>
             <th>Age</th>
+            <th>Role</th>
             <th>Action</th>
         </tr>
         </thead>
@@ -32,6 +33,9 @@
                 </td>
                 <td>
                     <c:out value="${user.age}"/>
+                </td>
+                <td>
+                    <c:out value="${user.roleList.get(0).role}"/>
                 </td>
                 <td>
                     <a href="/delete?id=<c:out value='${user.id}'/>">Delete</a>
