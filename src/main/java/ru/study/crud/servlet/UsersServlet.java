@@ -80,6 +80,7 @@ public class UsersServlet extends HttpServlet {
         Optional<Users> usersOptional = USER_DAO.findById(id);
         RequestDispatcher rd = req.getRequestDispatcher("/WEB-INF/view/insertPage.jsp");
         usersOptional.ifPresent(users -> req.setAttribute("user", users));
+        req.setAttribute("roleList", ROLE_DAO.findAll());
         rd.forward(req, resp);
     }
 
@@ -105,7 +106,10 @@ public class UsersServlet extends HttpServlet {
         String name = req.getParameter("name");
         String surname = req.getParameter("surname");
         int age = Integer.parseInt(req.getParameter("age"));
-        Users editUser = new Users(id, name, surname, age, new ArrayList<>()); // С РОЛЬЮ НАДО ПОДУМАТЬ
+        int r_id = Integer.parseInt(req.getParameter("role"));
+        List<Role> roleList = new ArrayList<>();
+        roleList.add(ROLE_DAO.findById(r_id).get());
+        Users editUser = new Users(id, name, surname, age, roleList); // С РОЛЬЮ НАДО ПОДУМАТЬ
         USER_DAO.update(editUser);
         resp.sendRedirect("/users");
     }
