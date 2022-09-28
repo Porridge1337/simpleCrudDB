@@ -22,6 +22,7 @@
             </c:if>
             <c:if test="${user!=null}">
                 <input type="hidden" name="id" value="<c:out value="${user.id}"/>">
+                <!-- <input type="hidden" name="r_id" value="<c:out value="${user.roleList.get(0).r_id}"/>">-->
             </c:if>
             <div>
                 <input type="text" name="name" value="<c:out value="${user.name}"/>" id="name">
@@ -44,6 +45,16 @@
             </div>
             <input type="submit" value="save"/>
             <c:if test="${user==null}">
+                <select id="role" name="role">
+                    <c:forEach items="${roleList}" var="roles">
+                        <option value="${roles.r_id}"> ${roles.role}</option>
+                    </c:forEach>
+                </select>
+            </c:if>
+            <c:if test="${user!=null}">
+                <div>
+                    <label for="role"><c:out value="${user.roleList.get(0).role}"/></label>
+                </div>
                 <select id="role" name="role">
                     <c:forEach items="${roleList}" var="roles">
                         <option value="${roles.r_id}"> ${roles.role}</option>
