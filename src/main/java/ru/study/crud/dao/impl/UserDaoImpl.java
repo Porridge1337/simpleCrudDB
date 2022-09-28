@@ -1,6 +1,7 @@
 package ru.study.crud.dao.impl;
 
 import ru.study.crud.dao.Dao;
+import ru.study.crud.model.Role;
 import ru.study.crud.model.Users;
 
 import java.io.FileInputStream;
@@ -12,10 +13,15 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Savepoint;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 public class UserDaoImpl implements Dao<Users, String> {
@@ -41,16 +47,23 @@ public class UserDaoImpl implements Dao<Users, String> {
         try (Connection conn = establishConnection()) {
             PreparedStatement ps = conn.prepareStatement(
                     """
-                               SELECT * FROM users;
+                               SELECT * FROM users AS u 
+                               left join user_role as ur
+                                on ur.user_id = u.id
+                                left join role as r
+                                on r.r_id = ur.role_id;
                             """
             );
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 Users user = new Users();
+                List<Role> roleList = new ArrayList<>();
+                roleList.add(new Role(rs.getInt("r_id"), rs.getString("role")));
                 user.setId(rs.getInt("id"));
                 user.setName(rs.getString("name"));
                 user.setSurname(rs.getString("surname"));
                 user.setAge(rs.getInt("age"));
+                user.setRoleList(roleList);
                 foundedUsers.add(user);
             }
         } catch (SQLException e) {
@@ -65,16 +78,24 @@ public class UserDaoImpl implements Dao<Users, String> {
         try (Connection conn = establishConnection()) {
             PreparedStatement ps = conn.prepareStatement(
                     """
-                            SELECT * FROM users WHERE id = ?;
+                            SELECT u.id, u.name, u.surname, u.age, r.r_id, r.role FROM users AS u 
+                               left join user_role as ur
+                                on ur.user_id = u.id
+                                left join role as r
+                                on r.r_id = ur.role_id
+                                WHERE u.id = ?;
                             """
             );
             ps.setInt(1, id);
             ResultSet rs = ps.executeQuery();
             while (rs.next()) {
+                List<Role> roleList = new ArrayList<>();
                 userById.setId(rs.getInt("id"));
                 userById.setName(rs.getString("name"));
                 userById.setSurname(rs.getString("surname"));
                 userById.setAge(rs.getInt("age"));
+                roleList.add(new Role(rs.getInt("r_id"), rs.getString("role")));
+                userById.setRoleList(roleList);
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -86,14 +107,41 @@ public class UserDaoImpl implements Dao<Users, String> {
     public boolean save(Users o) {
         boolean resultSave = false;
         try (Connection connection = establishConnection()) {
-            PreparedStatement ps = connection.prepareStatement(
+            PreparedStatement psUsers = connection.prepareStatement(
                     """
                             INSERT INTO users (name, surname, age) VALUES (?, ?, ?);
-                            """);
-            ps.setString(1, o.getName());
-            ps.setString(2, o.getSurname());
-            ps.setInt(3, o.getAge());
-            resultSave = ps.executeUpdate() > 0;
+                            """, Statement.RETURN_GENERATED_KEYS);
+            PreparedStatement psUserRoles = connection.prepareStatement(
+                    """
+                            INSERT INTO user_role (user_id, role_id) VALUES (?, ?);
+                            """
+            );
+            connection.setAutoCommit(false);
+            Savepoint save1 = connection.setSavepoint();
+            psUsers.setString(1, o.getName());
+            psUsers.setString(2, o.getSurname());
+            psUsers.setInt(3, o.getAge());
+            if ((o.getName().equals("") && o.getName().length() > 30) ||
+                    (o.getSurname().equals("") && o.getSurname().length() > 30) ||
+                    o.getAge() < 0) {
+                System.out.println("values shouldn't be null or less than zero");
+                connection.rollback(save1);
+            } else {
+                int userUpdate = psUsers.executeUpdate();
+                ResultSet generatedKeys = psUsers.getGeneratedKeys();
+                if ((generatedKeys != null) && (generatedKeys.next())) {
+                    int key = generatedKeys.getInt(1);
+                    psUserRoles.setInt(2, o.getRoleList().get(0).getR_id());
+                    psUserRoles.setInt(1, key);
+                } else {
+                    System.out.println("id не сгенерировался");
+                    connection.rollback(save1);
+                }
+                int user_role = psUserRoles.executeUpdate();
+                resultSave = userUpdate > 0 && user_role > 0;
+            }
+            connection.commit();
+            connection.setAutoCommit(true);
         } catch (SQLException e) {
             e.printStackTrace();
         }
