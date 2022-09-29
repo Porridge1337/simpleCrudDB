@@ -2,7 +2,6 @@ package ru.study.crud.dao.impl;
 
 import ru.study.crud.dao.DaoRole;
 import ru.study.crud.model.Role;
-import ru.study.crud.model.Users;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -13,7 +12,6 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
