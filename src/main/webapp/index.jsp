@@ -7,7 +7,7 @@
 <body>
 <h2>Hello World!</h2>
     <div>
-        <a href="/users">TIdKNyt cuda </a>
+        <a href="/users">To users</a>
     </div>
 </body>
 </html>
