@@ -1,6 +1,6 @@
 package ru.study.crud.servlet;
 
-import ru.study.crud.dao.Dao;
+import ru.study.crud.dao.DaoUser;
 import ru.study.crud.dao.DaoRole;
 import ru.study.crud.dao.impl.RoleDaoImpl;
 import ru.study.crud.dao.impl.UserDaoImpl;
@@ -22,7 +22,7 @@ import java.util.Optional;
 @WebServlet("/")
 public class UsersServlet extends HttpServlet {
 
-    private static final Dao<Users, String> USER_DAO = new UserDaoImpl();
+    private static final DaoUser USER_DAO = new UserDaoImpl();
     private static final DaoRole ROLE_DAO = new RoleDaoImpl();
 
     @Override
