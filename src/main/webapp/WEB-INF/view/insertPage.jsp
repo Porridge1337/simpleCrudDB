@@ -22,7 +22,6 @@
             </c:if>
             <c:if test="${user!=null}">
                 <input type="hidden" name="id" value="<c:out value="${user.id}"/>">
-                <!-- <input type="hidden" name="r_id" value="<c:out value="${user.roleList.get(0).r_id}"/>">-->
             </c:if>
             <div>
                 <input type="text" name="name" value="<c:out value="${user.name}"/>" id="name">
