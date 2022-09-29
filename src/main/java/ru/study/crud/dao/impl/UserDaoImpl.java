@@ -1,6 +1,6 @@
 package ru.study.crud.dao.impl;
 
-import ru.study.crud.dao.Dao;
+import ru.study.crud.dao.DaoUser;
 import ru.study.crud.model.Role;
 import ru.study.crud.model.Users;
 
@@ -22,7 +22,7 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
 
-public class UserDaoImpl implements Dao<Users, String> {
+public class UserDaoImpl implements DaoUser {
 
     private static final Properties DB_SETTINGS = new Properties();
 
